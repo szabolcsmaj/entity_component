@@ -3,6 +3,8 @@ module View exposing (..)
 import Html exposing (..)
 import Message exposing (..)
 import Model exposing (..)
+import Regex exposing (..)
+import List exposing (..)
 
 
 view : RootNode -> Html Msg
@@ -16,7 +18,9 @@ view node =
             ]
         , br [][]
         , div [] [
+            ul [] [
             expandNode node
+            ]
             ]
         ]
 
@@ -31,8 +35,7 @@ loopVariables : List Node -> List (Html Msg) -> (List Node, List (Html Msg))
 loopVariables variables previous =
     let 
         createNewLine variable =
-            div [] [ 
-                br [][],
+            li [] [
                 text variable.name, 
                 text ("(" ++ variable.nodeType ++ "): ") ,
                 showValue variable.value
@@ -45,4 +48,37 @@ loopVariables variables previous =
 
 showValue : String -> Html Msg
 showValue value =
+    if isObject value then
+       div [] [ convertToObject value ]
+    else
+       div [] [ text value ]
+
+objectString : String
+objectString =
+    "^.+@[0-9a-e]{8}\\[(.+)\\]$"
+
+isObject : String -> Bool
+isObject value =
+    contains (regex "^.+@[0-9a-e]{8}\\[.+\\]$") value
+
+convertToObject : String -> Html Msg
+convertToObject value =
+    let 
+        matches = 
+            find All (regex objectString) value
+            |> List.map .submatches
+
+        maybeValues =
+            head matches `Maybe.andThen` head `Maybe.andThen` (\x -> x)
+    in 
+       case maybeValues of
+           Just objectValue ->
+               doConvertObject objectValue
+           Nothing ->
+               text value
+
+
+
+doConvertObject : String -> Html Msg
+doConvertObject value =
     text value
