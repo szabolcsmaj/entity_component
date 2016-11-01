@@ -4,7 +4,7 @@ import Model exposing (..)
 import Message exposing (..)
 
 
-update : Msg -> Node -> (Node, Cmd Msg)
+update : Msg -> RootNode -> (RootNode, Cmd Msg)
 update msg node =
     case msg of
         LoadSuccess loadedNode ->

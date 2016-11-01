@@ -4,5 +4,5 @@ import Http
 import Model exposing (..)
 
 type Msg =
-    LoadSuccess Node
+    LoadSuccess RootNode
     | LoadFail Http.Error

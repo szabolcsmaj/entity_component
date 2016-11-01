@@ -7,9 +7,9 @@ import View exposing (..)
 import Update exposing (..)
 import Command exposing (..)
 
-initialize : (Node, Cmd Msg)
+initialize : (RootNode, Cmd Msg)
 initialize =
-    (Node "" "", load)
+    (RootNode "" "" [], load)
 
 main =
     Html.App.program 
