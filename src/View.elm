@@ -5,6 +5,7 @@ import Message exposing (..)
 import Model exposing (..)
 import Regex exposing (..)
 import List exposing (..)
+import String exposing (..)
 
 
 view : RootNode -> Html Msg
@@ -59,7 +60,7 @@ objectString =
 
 isObject : String -> Bool
 isObject value =
-    contains (regex "^.+@[0-9a-e]{8}\\[.+\\]$") value
+    Regex.contains (regex "^.+@[0-9a-e]{8}\\[.+\\]$") value
 
 convertToObject : String -> Html Msg
 convertToObject value =
@@ -73,7 +74,9 @@ convertToObject value =
     in 
        case maybeValues of
            Just objectValue ->
-               doConvertObject objectValue
+               ul [] [
+                   doConvertObject objectValue
+               ]
            Nothing ->
                text value
 
@@ -81,4 +84,29 @@ convertToObject value =
 
 doConvertObject : String -> Html Msg
 doConvertObject value =
-    text value
+    let
+        inflateObject =
+            value
+            |> String.split ","
+            |> List.map (\x -> (String.split "=" x))
+            |> List.filterMap createNode
+
+        (_, vars) = loopVariables inflateObject []
+    in
+       li [] vars
+       --text (toString inflateObject)
+    
+createNode : List String -> Maybe Node
+createNode list =
+    let
+        keyValues =
+            list
+            |> List.filter (\x -> x /= "=")
+    in
+       case keyValues of
+           (key::rest) ->
+               case rest of
+                   [value] -> Just (Node key "unknown" value)
+                   _ -> Nothing
+           [] ->
+               Nothing
