@@ -8,4 +8,7 @@ import Model exposing (..)
 view : Node -> Html Msg
 view node =
     div []
-        [ text "ROOT" ]
+        [ text "Node data:"
+        , text node.class
+        , text node.method
+        ]

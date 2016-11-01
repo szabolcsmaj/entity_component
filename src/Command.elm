@@ -8,7 +8,7 @@ import Message exposing (..)
 
 serverUrl : String
 serverUrl = 
-    "http://localhost:4000"
+    "http://localhost:4000/entity"
 
 load : Cmd Msg
 load = 
