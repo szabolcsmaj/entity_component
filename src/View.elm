@@ -31,30 +31,30 @@ displayNodes : List Node -> Html Msg
 displayNodes nodes =
     let
         ( _, vars ) =
-            loopVariables nodes []
+            loopNodes nodes []
     in
         div [] vars
 
 
-loopVariables : List Node -> List (Html Msg) -> ( List Node, List (Html Msg) )
-loopVariables variables previous =
+loopNodes : List Node -> List (Html Msg) -> ( List Node, List (Html Msg) )
+loopNodes nodes elements =
     let
-        createNewNodeHtml variable =
+        createNodeHtml node =
             li []
-                [ text variable.name
-                , text ("(" ++ variable.nodeType ++ "): ")
-                , displayNodeValue variable.value
+                [ text node.name
+                , text ("(" ++ node.nodeType ++ "): ")
+                , displayNodeValue node.value
                 ]
     in
-        case variables of
+        case nodes of
             [] ->
-                ( [], previous )
+                ( [], elements )
 
-            [ variable ] ->
-                ( [], previous ++ [ createNewNodeHtml variable ] )
+            [ node ] ->
+                ( [], elements ++ [ createNodeHtml node ] )
 
-            variable :: remaining ->
-                loopVariables remaining (previous ++ [ createNewNodeHtml variable ])
+            node :: remaining ->
+                loopNodes remaining (elements ++ [ createNodeHtml node ])
 
 
 displayNodeValue : String -> Html Msg
@@ -62,6 +62,7 @@ displayNodeValue value =
     if isObject value then
         div []
             [ text (toString value)
+              -- TODO: loopNodes should be called here
             , convertNodeValueToObject value
             ]
     else
@@ -70,7 +71,7 @@ displayNodeValue value =
 
 objectRegex : String
 objectRegex =
-    "^(.+)(@[0-9a-e]{8})?\\[(.+)\\]$"
+    "^([a-zA-Z0-9.]+)(@[0-9a-e]{8})?\\[(.+)\\]$"
 
 
 isObject : String -> Bool
@@ -84,9 +85,18 @@ convertNodeValueToObject value =
         matches =
             find All (regex objectRegex) value
                 |> List.map .submatches
+                |> List.head
+
+        reverse_matches =
+            case matches of
+                Just match_list ->
+                    List.reverse match_list
+
+                Nothing ->
+                    []
 
         maybeValues =
-            head matches `Maybe.andThen` head `Maybe.andThen` (\x -> x)
+            head reverse_matches `Maybe.andThen` (\x -> x)
     in
         case maybeValues of
             Just objectValue ->
@@ -108,7 +118,7 @@ doConvertObject value =
                 |> List.filterMap createNode
 
         ( _, vars ) =
-            loopVariables inflateObject []
+            loopNodes inflateObject []
     in
         li [] vars
 
