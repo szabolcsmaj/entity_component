@@ -6,7 +6,7 @@ import Model exposing (..)
 import Regex exposing (..)
 import List exposing (..)
 import String exposing (..)
-import Debug exposing (..)
+import Formatters exposing (determineType)
 
 
 view : RootNode -> Html Msg
@@ -137,7 +137,7 @@ createNode list =
                         Nothing
 
                     [ value ] ->
-                        Just (Node key "unknown" value)
+                        Just (Node key (determineType value) value)
 
                     possibleObjectSliced ->
                         let
