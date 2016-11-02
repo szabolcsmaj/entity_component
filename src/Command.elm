@@ -6,14 +6,17 @@ import Json.Decode as Decode exposing (..)
 import Model exposing (..)
 import Message exposing (..)
 
+
 serverUrl : String
-serverUrl = 
+serverUrl =
     "http://localhost:4000/entity"
 
+
 load : Cmd Msg
-load = 
+load =
     Http.get objectDecoder serverUrl
-    |> Task.perform LoadFail LoadSuccess
+        |> Task.perform LoadFail LoadSuccess
+
 
 nodeDecoder : Decode.Decoder Node
 nodeDecoder =
@@ -22,9 +25,11 @@ nodeDecoder =
         ("type" := string)
         ("value" := string)
 
+
 nodeListDecoder : Decode.Decoder (List Node)
 nodeListDecoder =
     list nodeDecoder
+
 
 objectDecoder : Decode.Decoder RootNode
 objectDecoder =

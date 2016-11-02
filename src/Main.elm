@@ -7,15 +7,16 @@ import View exposing (..)
 import Update exposing (..)
 import Command exposing (..)
 
-initialize : (RootNode, Cmd Msg)
+
+initialize : ( RootNode, Cmd Msg )
 initialize =
-    (RootNode "" "" [], load)
+    ( RootNode "" "" [], load )
+
 
 main =
-    Html.App.program 
-    { init = initialize
-    , view = view
-    , update = update
-    , subscriptions = \_ -> Sub.none
-    }
-
+    Html.App.program
+        { init = initialize
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
