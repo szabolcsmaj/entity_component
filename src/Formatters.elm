@@ -4,12 +4,6 @@ import String
 import Regex
 
 
---import Date
-
-import Date.Extra as Date
-import Debug
-
-
 determineType : String -> String
 determineType value =
     case
