@@ -1,4 +1,4 @@
-module View exposing (view)
+module View exposing (view, getObjectWithClosingBracket, splitValue)
 
 import Html exposing (..)
 import Message exposing (..)
@@ -30,13 +30,13 @@ view rootNode =
 displayNodes : List Node -> Html Msg
 displayNodes nodes =
     let
-        ( _, vars ) =
+        variables =
             loopNodes nodes []
     in
-        div [] vars
+        div [] variables
 
 
-loopNodes : List Node -> List (Html Msg) -> ( List Node, List (Html Msg) )
+loopNodes : List Node -> List (Html Msg) -> List (Html Msg)
 loopNodes nodes elements =
     let
         createNodeHtml node =
@@ -48,10 +48,10 @@ loopNodes nodes elements =
     in
         case nodes of
             [] ->
-                ( [], elements )
+                elements
 
             [ node ] ->
-                ( [], elements ++ [ createNodeHtml node ] )
+                elements ++ [ createNodeHtml node ]
 
             node :: remaining ->
                 loopNodes remaining (elements ++ [ createNodeHtml node ])
@@ -71,7 +71,7 @@ displayNodeValue value =
 
 objectRegex : String
 objectRegex =
-    "^([a-zA-Z0-9.]+)(@[0-9a-e]{8})?\\[(.+)\\]$"
+    "^(([a-zA-Z0-9.]+)(@[0-9a-e]{8})?)\\[\\1,(.+)\\]$"
 
 
 isObject : String -> Bool
@@ -117,37 +117,116 @@ doConvertObject value =
                 |> List.map (\x -> (String.split "=" x))
                 |> List.filterMap createNode
 
-        ( _, vars ) =
+        variables =
             loopNodes inflateObject []
     in
-        li [] vars
+        li [] variables
+
+
+splitValue : String -> List String
+splitValue value =
+    let
+        valueList =
+            doSplitValue value []
+    in
+        valueList |> List.reverse
+
+
+doSplitValue : String -> List String -> List String
+doSplitValue remainingPart values =
+    let
+        splitted =
+            Regex.split (AtMost 1) (regex ",") remainingPart
+    in
+        case splitted of
+            [] ->
+                values
+
+            [ value ] ->
+                value :: values
+
+            value :: remainder ->
+                let
+                    objectBeginningPattern =
+                        "^(.+)=[a-zA-Z0-9._@]+\\[(.*)$"
+
+                    isAnotherObjectBeginning =
+                        Regex.contains (regex objectBeginningPattern) value
+
+                    remainderString =
+                        String.join "," remainder
+
+                    ( newValue, newRemainder ) =
+                        if isAnotherObjectBeginning then
+                            -- We rejoin the splitted string
+                            getObjectWithClosingBracket (value ++ "," ++ remainderString)
+                        else
+                            ( value, remainderString )
+                in
+                    doSplitValue newRemainder (newValue :: values)
+
+
+getObjectWithClosingBracket : String -> ( String, String )
+getObjectWithClosingBracket text =
+    doGetObjectWithClosingBracket text "" 0
+
+
+doGetObjectWithClosingBracket : String -> String -> Int -> ( String, String )
+doGetObjectWithClosingBracket remainingText objectText bracketCounter =
+    case (uncons remainingText) of
+        Just ( head, tail ) ->
+            let
+                newObjectText =
+                    objectText ++ (String.fromChar head)
+            in
+                case head of
+                    ']' ->
+                        if (bracketCounter == 1) then
+                            let
+                                finalRemainder =
+                                    case (uncons tail) of
+                                        Just ( ',', tailOfTail ) ->
+                                            tailOfTail
+
+                                        _ ->
+                                            tail
+                            in
+                                ( newObjectText, finalRemainder )
+                        else
+                            doGetObjectWithClosingBracket tail newObjectText (bracketCounter - 1)
+
+                    '[' ->
+                        doGetObjectWithClosingBracket tail newObjectText (bracketCounter + 1)
+
+                    _ ->
+                        doGetObjectWithClosingBracket tail newObjectText bracketCounter
+
+        Nothing ->
+            ( remainingText, remainingText )
 
 
 createNode : List String -> Maybe Node
-createNode list =
-    let
-        keyValues =
-            list
-                |> List.filter (\x -> x /= "=")
-    in
-        case keyValues of
-            key :: rest ->
-                case rest of
-                    [] ->
-                        Nothing
+createNode keyValues =
+    case keyValues of
+        key :: rest ->
+            case rest of
+                [] ->
+                    Nothing
 
-                    [ value ] ->
-                        Just (Node key (determineType value) value)
+                [ value ] ->
+                    Just (Node key (determineType value) value)
 
-                    possibleObjectSliced ->
-                        let
-                            possibleObject =
-                                String.join "," possibleObjectSliced
-                        in
-                            if isObject possibleObject then
-                                createNode [ possibleObject ]
-                            else
-                                Nothing
+                possibleObjectSliced ->
+                    let
+                        possibleObject =
+                            String.join "," possibleObjectSliced
 
-            [] ->
-                Nothing
+                        --TODO: This is inside the object and the properties are already sliced up because of String.split executed above
+                    in
+                        if isObject possibleObject then
+                            createNode [ possibleObject ]
+                        else
+                            Nothing
+
+        [] ->
+            Nothing
