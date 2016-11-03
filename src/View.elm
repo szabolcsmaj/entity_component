@@ -61,9 +61,8 @@ displayNodeValue : String -> Html Msg
 displayNodeValue value =
     if isObject value then
         div []
-            [ text (toString value)
-              -- TODO: loopNodes should be called here
-            , convertNodeValueToObject value
+            [ --text (toString value),
+              convertNodeValueToObject value
             ]
     else
         div [] [ text value ]
@@ -71,7 +70,7 @@ displayNodeValue value =
 
 objectRegex : String
 objectRegex =
-    "^(([a-zA-Z0-9.]+)(@[0-9a-e]{8})?)\\[\\1,(.+)\\]$"
+    "^(([a-zA-Z0-9.]+)(@[0-9a-f]{8})?)\\[(.+)\\]$"
 
 
 isObject : String -> Bool
@@ -217,17 +216,21 @@ createNode keyValue =
                         Nothing
 
                     [ value ] ->
-                        Just (Node key (determineType value) value)
-
-                    possibleObjectSliced ->
                         let
-                            possibleObject =
-                                String.join "," possibleObjectSliced
+                            typeText =
+                                if isObject value then
+                                    "Class"
+                                else
+                                    determineType value
                         in
-                            if isObject possibleObject then
-                                createNode possibleObject
-                            else
-                                Nothing
+                            Just (Node key typeText value)
+
+                    list ->
+                        let
+                            mergedList =
+                                String.join "," list
+                        in
+                            Just (Node key (determineType mergedList) mergedList)
 
             [] ->
                 Nothing
