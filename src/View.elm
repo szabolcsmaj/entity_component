@@ -113,8 +113,7 @@ doConvertObject value =
     let
         inflateObject =
             value
-                |> String.split ","
-                |> List.map (\x -> (String.split "=" x))
+                |> splitValue
                 |> List.filterMap createNode
 
         variables =
@@ -205,28 +204,30 @@ doGetObjectWithClosingBracket remainingText objectText bracketCounter =
             ( remainingText, remainingText )
 
 
-createNode : List String -> Maybe Node
-createNode keyValues =
-    case keyValues of
-        key :: rest ->
-            case rest of
-                [] ->
-                    Nothing
+createNode : String -> Maybe Node
+createNode keyValue =
+    let
+        splitKeyValue =
+            Regex.split (AtMost 1) (regex "=") keyValue
+    in
+        case splitKeyValue of
+            key :: rest ->
+                case rest of
+                    [] ->
+                        Nothing
 
-                [ value ] ->
-                    Just (Node key (determineType value) value)
+                    [ value ] ->
+                        Just (Node key (determineType value) value)
 
-                possibleObjectSliced ->
-                    let
-                        possibleObject =
-                            String.join "," possibleObjectSliced
+                    possibleObjectSliced ->
+                        let
+                            possibleObject =
+                                String.join "," possibleObjectSliced
+                        in
+                            if isObject possibleObject then
+                                createNode possibleObject
+                            else
+                                Nothing
 
-                        --TODO: This is inside the object and the properties are already sliced up because of String.split executed above
-                    in
-                        if isObject possibleObject then
-                            createNode [ possibleObject ]
-                        else
-                            Nothing
-
-        [] ->
-            Nothing
+            [] ->
+                Nothing
