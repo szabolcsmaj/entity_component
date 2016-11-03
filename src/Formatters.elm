@@ -11,6 +11,7 @@ determineType value =
             [ (parseInt value)
             , (parseFloat value)
             , (parseDate value)
+            , (parseBool value)
             , (Just "String")
             ]
         )
@@ -48,3 +49,20 @@ parseDate value =
         Just "Date"
     else
         Nothing
+
+
+parseBool : String -> Maybe String
+parseBool value =
+    let
+        boolText =
+            "Boolean"
+    in
+        case (String.toLower value) of
+            "false" ->
+                Just boolText
+
+            "true" ->
+                Just boolText
+
+            _ ->
+                Nothing
