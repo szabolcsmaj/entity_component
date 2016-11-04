@@ -60,16 +60,14 @@ loopNodes nodes elements =
 displayNodeValue : String -> Html Msg
 displayNodeValue value =
     if isObject value then
-        div []
-            [ --text (toString value),
-              convertNodeValueToObject value
-            ]
+        convertNodeValueToObject value
     else
-        div [] [ text value ]
+        text value
 
 
 objectRegex : String
 objectRegex =
+    -- com.company.ObjectName@1234abcd[id=1,name="QQQ"]
     "^(([a-zA-Z0-9.]+)(@[0-9a-f]{8})?)\\[(.+)\\]$"
 
 
@@ -99,15 +97,13 @@ convertNodeValueToObject value =
     in
         case maybeValues of
             Just objectValue ->
-                ul []
-                    [ doConvertObject objectValue
-                    ]
+                ul [] (doConvertObject objectValue)
 
             Nothing ->
                 text value
 
 
-doConvertObject : String -> Html Msg
+doConvertObject : String -> List (Html Msg)
 doConvertObject value =
     let
         inflateObject =
@@ -118,7 +114,7 @@ doConvertObject value =
         variables =
             loopNodes inflateObject []
     in
-        li [] variables
+        variables
 
 
 splitValue : String -> List String
