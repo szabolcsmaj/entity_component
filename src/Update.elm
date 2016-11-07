@@ -8,7 +8,7 @@ update : Msg -> RootNode -> ( RootNode, Cmd Msg )
 update msg rootNode =
     case msg of
         LoadSuccess loadedNode ->
-            ( loadedNode, Cmd.none )
+            ( (parseNodes loadedNode), Cmd.none )
 
         LoadFail error ->
             let
@@ -20,6 +20,29 @@ update msg rootNode =
 
         SwitchExtended nodeName ->
             ( { rootNode | variables = (switchExtended nodeName rootNode.variables) }, Cmd.none )
+
+
+parseNodes : RootNode -> RootNode
+parseNodes rootNode =
+    { rootNode | variables = (addIdToNodes rootNode.variables) }
+
+
+addIdToNodes : List Node -> List Node
+addIdToNodes nodes =
+    doAddIdToNodes nodes [] 1
+
+
+doAddIdToNodes : List Node -> List Node -> Int -> List Node
+doAddIdToNodes nodes remaining nextId =
+    case nodes of
+        [] ->
+            remaining
+
+        [ node ] ->
+            remaining ++ [ { node | id = nextId } ]
+
+        node :: tail ->
+            doAddIdToNodes tail (remaining ++ [ { node | id = nextId } ]) (nextId + 1)
 
 
 switchExtended : String -> List Node -> List Node

@@ -127,11 +127,8 @@ doConvertObject value =
             value
                 |> splitValue
                 |> List.filterMap createNode
-
-        variables =
-            loopNodes inflateObject []
     in
-        variables
+        loopNodes inflateObject []
 
 
 splitValue : String -> List String
@@ -236,14 +233,14 @@ createNode keyValue =
                                 else
                                     determineType value
                         in
-                            Just (Node key typeText value True)
+                            Just (Node 0 key typeText value True)
 
                     list ->
                         let
                             mergedList =
                                 String.join "," list
                         in
-                            Just (Node key (determineType mergedList) mergedList True)
+                            Just (Node 0 key (determineType mergedList) mergedList True)
 
             [] ->
                 Nothing

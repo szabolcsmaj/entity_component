@@ -20,7 +20,8 @@ load =
 
 nodeDecoder : Decode.Decoder Node
 nodeDecoder =
-    Decode.object4 Node
+    Decode.object5 Node
+        (succeed 0)
         ("name" := string)
         ("type" := string)
         ("value" := string)

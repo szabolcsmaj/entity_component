@@ -14,7 +14,8 @@ type alias RootNode =
 
 
 type alias Node =
-    { name : String
+    { id : Int
+    , name : String
     , nodeType : String
     , value : String
     , extended : Bool
