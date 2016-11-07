@@ -17,4 +17,5 @@ type alias Node =
     { name : String
     , nodeType : String
     , value : String
+    , extended : Bool
     }

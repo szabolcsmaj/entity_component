@@ -1,6 +1,8 @@
 module View exposing (view, getObjectWithClosingBracket, splitValue)
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Message exposing (..)
 import Model exposing (..)
 import Regex exposing (..)
@@ -43,7 +45,7 @@ loopNodes nodes elements =
             li []
                 [ text node.name
                 , text ("(" ++ node.nodeType ++ "): ")
-                , displayNodeValue node.value
+                , displayNodeValue node
                 ]
     in
         case nodes of
@@ -57,12 +59,27 @@ loopNodes nodes elements =
                 loopNodes remaining (elements ++ [ createNodeHtml node ])
 
 
-displayNodeValue : String -> Html Msg
-displayNodeValue value =
-    if isObject value then
-        convertNodeValueToObject value
+nodeStyle : Bool -> List ( String, String )
+nodeStyle extended =
+    let
+        attributeName =
+            "display"
+    in
+        if extended then
+            []
+        else
+            [ ( attributeName, "none" ) ]
+
+
+displayNodeValue : Node -> Html Msg
+displayNodeValue node =
+    if isObject node.value then
+        if node.extended then
+            div [ style [ ( "display", "inline" ) ] ] [ button [ onClick (SwitchExtended node.name) ] [ text "-" ], convertNodeValueToObject node.value ]
+        else
+            button [ onClick (SwitchExtended node.name) ] [ text "+" ]
     else
-        text value
+        text node.value
 
 
 objectRegex : String
@@ -219,14 +236,14 @@ createNode keyValue =
                                 else
                                     determineType value
                         in
-                            Just (Node key typeText value)
+                            Just (Node key typeText value True)
 
                     list ->
                         let
                             mergedList =
                                 String.join "," list
                         in
-                            Just (Node key (determineType mergedList) mergedList)
+                            Just (Node key (determineType mergedList) mergedList True)
 
             [] ->
                 Nothing
