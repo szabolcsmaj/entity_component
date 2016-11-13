@@ -5,7 +5,7 @@ import Message exposing (..)
 import Model exposing (..)
 import View exposing (..)
 import Update exposing (..)
-import Command exposing (..)
+import Command exposing (load)
 
 
 initialize : ( RootNode, Cmd Msg )

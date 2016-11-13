@@ -2,6 +2,7 @@ module Update exposing (..)
 
 import Model exposing (..)
 import Message exposing (..)
+import Regex exposing (..)
 
 
 update : Msg -> RootNode -> ( RootNode, Cmd Msg )
@@ -34,15 +35,46 @@ addIdToNodes nodes =
 
 doAddIdToNodes : List Node -> List Node -> Int -> List Node
 doAddIdToNodes nodes remaining nextId =
-    case nodes of
-        [] ->
-            remaining
+    let
+        assignIdToNode node =
+            { node | id = nextId }
 
-        [ node ] ->
-            remaining ++ [ { node | id = nextId } ]
+        parseNode node =
+            case node.value.stringValue of
+                Just value ->
+                    if isObject value then
+                        -- TODO: stringValue to false, nodeValue --> Parse!
+                        { node | value = (NodeValue True (PossibleNode Nothing) Nothing) }
+                            |> assignIdToNode
+                    else
+                        assignIdToNode node
 
-        node :: tail ->
-            doAddIdToNodes tail (remaining ++ [ { node | id = nextId } ]) (nextId + 1)
+                Nothing ->
+                    node
+
+        _ =
+            Debug.log "id: " nextId
+    in
+        case nodes of
+            [] ->
+                remaining
+
+            [ node ] ->
+                remaining ++ [ (parseNode node) ]
+
+            node :: tail ->
+                doAddIdToNodes tail (remaining ++ [ (parseNode node) ]) (nextId + 1)
+
+
+objectRegex : String
+objectRegex =
+    -- com.company.ObjectName@1234abcd[id=1,name="QQQ"]
+    "^(([a-zA-Z0-9.]+)(@[0-9a-f]{8})?)\\[(.+)\\]$"
+
+
+isObject : String -> Bool
+isObject value =
+    Regex.contains (regex objectRegex) value
 
 
 switchExtended : String -> List Node -> List Node

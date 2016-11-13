@@ -1,6 +1,7 @@
 # TODO:
 
- - After parsing possible object values, update model to use these instead of the plain old string.
+ - Move parsing of objects after the loading phase from the View
+ - When parsing the objects, update the model too 
  - Implement collapse/expand for child nodes.
  - Store if the expanding of the object requires a server call. This might be shown to the UI too so the end users are aware as well (e.g.: another color for expand)
  - Parse java.util.HashMap ({Key Name=value,Another Key=Another Value})

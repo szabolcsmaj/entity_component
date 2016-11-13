@@ -44,6 +44,7 @@ loopNodes nodes elements =
         createNodeHtml node =
             li []
                 [ text node.name
+                  --, text ("(" ++ (toString node.id) ++ ")")
                 , text ("(" ++ node.nodeType ++ "): ")
                 , displayNodeValue node
                 ]
@@ -73,13 +74,27 @@ nodeStyle extended =
 
 displayNodeValue : Node -> Html Msg
 displayNodeValue node =
-    if isObject node.value then
-        if node.extended then
-            div [ style [ ( "display", "inline" ) ] ] [ button [ onClick (SwitchExtended node.name) ] [ text "-" ], convertNodeValueToObject node.value ]
+    let
+        getStringValue =
+            case node.value.stringValue of
+                Just stringValue ->
+                    stringValue
+
+                Nothing ->
+                    ""
+    in
+        if isObject getStringValue then
+            if node.extended then
+                div [ style [ ( "display", "inline" ) ] ] [ button [ onClick (SwitchExtended node.name) ] [ text "-" ], convertNodeValueToObject getStringValue ]
+            else
+                button [ onClick (SwitchExtended node.name) ] [ text "+" ]
         else
-            button [ onClick (SwitchExtended node.name) ] [ text "+" ]
-    else
-        text node.value
+            case node.value.stringValue of
+                Just stringValue ->
+                    text stringValue
+
+                Nothing ->
+                    text ""
 
 
 objectRegex : String
@@ -232,15 +247,21 @@ createNode keyValue =
                                     "Class"
                                 else
                                     determineType value
+
+                            --cnv =
+                            --NodeValue { isObject = False, nodeValue = Nothing, stringValue = (Just value) }
                         in
-                            Just (Node 0 key typeText value True)
+                            Just (Node 0 key typeText (NodeValue False (PossibleNode Nothing) (Just value)) True)
 
                     list ->
                         let
                             mergedList =
                                 String.join "," list
+
+                            --cnv =
+                            --NodeValue { isObject = False, nodeValue = Nothing, stringValue = (Just mergedList) }
                         in
-                            Just (Node 0 key (determineType mergedList) mergedList True)
+                            Just (Node 0 key (determineType mergedList) (NodeValue False (PossibleNode Nothing) (Just mergedList)) True)
 
             [] ->
                 Nothing

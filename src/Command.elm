@@ -24,8 +24,17 @@ nodeDecoder =
         (succeed 0)
         ("name" := string)
         ("type" := string)
-        ("value" := string)
+        nodeValueDecoder
         (succeed True)
+
+
+nodeValueDecoder : Decode.Decoder NodeValue
+nodeValueDecoder =
+    Decode.object3
+        NodeValue
+        (succeed False)
+        (succeed (PossibleNode Nothing))
+        ("value" := (maybe string))
 
 
 nodeListDecoder : Decode.Decoder (List Node)

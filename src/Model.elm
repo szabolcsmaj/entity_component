@@ -13,10 +13,21 @@ type alias RootNode =
     }
 
 
+type alias NodeValue =
+    { isObject : Bool
+    , nodeValue : PossibleNode
+    , stringValue : Maybe String
+    }
+
+
+type PossibleNode
+    = PossibleNode (Maybe Node)
+
+
 type alias Node =
     { id : Int
     , name : String
     , nodeType : String
-    , value : String
+    , value : NodeValue
     , extended : Bool
     }
