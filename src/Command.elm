@@ -33,7 +33,7 @@ nodeValueDecoder =
     Decode.object3
         NodeValue
         (succeed False)
-        (succeed (PossibleNode Nothing))
+        (succeed (PossibleNodes Nothing))
         ("value" := (maybe string))
 
 

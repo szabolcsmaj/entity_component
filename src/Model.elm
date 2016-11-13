@@ -15,13 +15,13 @@ type alias RootNode =
 
 type alias NodeValue =
     { isObject : Bool
-    , nodeValue : PossibleNode
+    , nodeValues : PossibleNodes
     , stringValue : Maybe String
     }
 
 
-type PossibleNode
-    = PossibleNode (Maybe Node)
+type PossibleNodes
+    = PossibleNodes (Maybe (List Node))
 
 
 type alias Node =
@@ -30,4 +30,10 @@ type alias Node =
     , nodeType : String
     , value : NodeValue
     , extended : Bool
+    }
+
+
+type alias KeyValuePair =
+    { key : String
+    , value : String
     }
