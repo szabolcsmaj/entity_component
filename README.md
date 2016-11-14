@@ -1,8 +1,7 @@
 # TODO:
 
- - Move parsing of objects after the loading phase from the View
- - When parsing the objects, update the model too 
- - Implement collapse/expand for child nodes.
+ - id generation is not working properly (skewed numbers), fix it!
+ - Investigate if it makes sense to flatten the object hierarchy of nodes and refer to the parent object by id. Iteration would be easier..
  - Store if the expanding of the object requires a server call. This might be shown to the UI too so the end users are aware as well (e.g.: another color for expand)
  - Parse java.util.HashMap ({Key Name=value,Another Key=Another Value})
  - Parse java.util.ArrayList ([Object1, Object2])
