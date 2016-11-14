@@ -100,11 +100,11 @@ displayNodeValue node =
         if node.value.isObject then
             if node.extended then
                 div [ style [ ( "display", "inline" ) ] ]
-                    [ button [ onClick (SwitchExtended node.name) ] [ text "-" ]
+                    [ button [ onClick (SwitchExtended node.id) ] [ text "-" ]
                     , displayChildNodes node
                     ]
             else
-                button [ onClick (SwitchExtended node.name) ] [ text "+" ]
+                button [ onClick (SwitchExtended node.id) ] [ text "+" ]
         else
             case node.value.stringValue of
                 Just stringValue ->

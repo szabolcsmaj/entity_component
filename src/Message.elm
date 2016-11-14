@@ -7,4 +7,4 @@ import Model exposing (..)
 type Msg
     = LoadSuccess RootNode
     | LoadFail Http.Error
-    | SwitchExtended String
+    | SwitchExtended Int
