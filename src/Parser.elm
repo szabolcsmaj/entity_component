@@ -223,7 +223,8 @@ createNode keyValue currentId =
             key :: rest ->
                 case rest of
                     [] ->
-                        ( Nothing, currentId + 1 )
+                        -- Do not increment the next Id because the node is Nothing
+                        ( Nothing, currentId )
 
                     [ value ] ->
                         let
@@ -235,9 +236,6 @@ createNode keyValue currentId =
 
                             ( nodes, _ ) =
                                 createChildNodes value currentId
-
-                            _ =
-                                Debug.log "createNode (currentId, kv)" ( currentId, keyValue )
 
                             ( updatedNode, nextId ) =
                                 updateNodeToObject (Node 0 key typeText (NodeValue (isObject value) (PossibleNodes (Just nodes)) (Just value)) True) value currentId
@@ -256,4 +254,5 @@ createNode keyValue currentId =
                             ( Just updatedNode, currentId + 1 )
 
             [] ->
-                ( Nothing, currentId + 1 )
+                -- Do not increment the next Id because the node is Nothing
+                ( Nothing, currentId )
