@@ -81,8 +81,9 @@ updateNodeToObject node value currentId =
                 Nothing ->
                     []
 
-        maybeValues =
-            head reverse_matches `Maybe.andThen` (\x -> x)
+        possiblePropertyStringList =
+            head reverseMatches
+                |> Maybe.andThen (\x -> x)
     in
         case maybeValues of
             Just objectValue ->

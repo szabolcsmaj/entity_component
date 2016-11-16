@@ -7,7 +7,7 @@ import Regex
 determineType : String -> String
 determineType value =
     case
-        (Maybe.oneOf
+        (oneOf
             [ (parseInt value)
             , (parseFloat value)
             , (parseDate value)
@@ -21,6 +21,21 @@ determineType value =
 
         Nothing ->
             "Unknown"
+
+
+oneOf : List (Maybe String) -> Maybe String
+oneOf maybes =
+    case maybes of
+        [] ->
+            Nothing
+
+        maybe :: rest ->
+            case maybe of
+                Nothing ->
+                    oneOf rest
+
+                Just _ ->
+                    maybe
 
 
 parseInt : String -> Maybe String

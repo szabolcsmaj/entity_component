@@ -14,27 +14,27 @@ serverUrl =
 
 load : Cmd Msg
 load =
-    Http.get objectDecoder serverUrl
-        |> Task.perform LoadFail LoadSuccess
+    Http.get serverUrl objectDecoder
+        |> Http.send Loaded
 
 
 nodeDecoder : Decode.Decoder Node
 nodeDecoder =
-    Decode.object5 Node
+    Decode.map5 Node
         (succeed 0)
-        ("name" := string)
-        ("type" := string)
+        (field "name" string)
+        (field "type" string)
         nodeValueDecoder
         (succeed True)
 
 
 nodeValueDecoder : Decode.Decoder NodeValue
 nodeValueDecoder =
-    Decode.object3
+    Decode.map3
         NodeValue
         (succeed False)
         (succeed (PossibleNodes Nothing))
-        ("value" := (maybe string))
+        (field "value" (maybe string))
 
 
 nodeListDecoder : Decode.Decoder (List Node)
@@ -44,7 +44,7 @@ nodeListDecoder =
 
 objectDecoder : Decode.Decoder RootNode
 objectDecoder =
-    Decode.object3 RootNode
-        ("class" := Decode.string)
-        ("method" := Decode.string)
-        ("variables" := nodeListDecoder)
+    Decode.map3 RootNode
+        (field "class" Decode.string)
+        (field "method" Decode.string)
+        (field "variables" nodeListDecoder)

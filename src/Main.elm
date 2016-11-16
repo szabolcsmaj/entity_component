@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html.App exposing (program)
+import Html exposing (program)
 import Message exposing (..)
 import Model exposing (..)
 import View exposing (..)
@@ -14,7 +14,7 @@ initialize =
 
 
 main =
-    Html.App.program
+    Html.program
         { init = initialize
         , view = view
         , update = update

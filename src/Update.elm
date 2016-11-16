@@ -11,10 +11,10 @@ import Parser exposing (..)
 update : Msg -> RootNode -> ( RootNode, Cmd Msg )
 update msg rootNode =
     case msg of
-        LoadSuccess loadedNode ->
+        Loaded (Ok loadedNode) ->
             ( (Parser.parseNodes loadedNode), Cmd.none )
 
-        LoadFail error ->
+        Loaded (Err error) ->
             let
                 _ =
                     --TODO: Remove this and handle error properly
@@ -46,11 +46,11 @@ extendNodes id node =
                 case pnodes of
                     Just childNodes ->
                         let
-                            value' =
+                            nodeValue =
                                 node.value
 
                             newValue =
-                                { value' | nodeValues = PossibleNodes ((Just (List.map switchNodes childNodes))) }
+                                { nodeValue | nodeValues = PossibleNodes ((Just (List.map switchNodes childNodes))) }
                         in
                             { node | value = newValue }
 

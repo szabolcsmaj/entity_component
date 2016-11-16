@@ -5,6 +5,5 @@ import Model exposing (..)
 
 
 type Msg
-    = LoadSuccess RootNode
-    | LoadFail Http.Error
+    = Loaded (Result Http.Error RootNode)
     | SwitchExtended Int
