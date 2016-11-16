@@ -29,11 +29,11 @@ doParseNodes nodes remaining currentId =
         assignIdToNode node =
             { node | id = currentId }
 
+        -- Return the udpated node and the next id
         parseNode node =
             case node.value.stringValue of
                 Just value ->
                     if isObject value then
-                        --{ node | value = (NodeValue True (PossibleNodes (createNodes value)) Nothing) }
                         (updateNodeToObject node value currentId)
                     else
                         ( (assignIdToNode node), currentId + 1 )
@@ -60,21 +60,18 @@ doParseNodes nodes remaining currentId =
                     doParseNodes tail (remaining ++ [ updatedNode ]) nextId
 
 
-createNodes : String -> String -> String -> Node
-createNodes key typeText value =
-    Node 0 key typeText (NodeValue (isObject value) (PossibleNodes Nothing) (Just value)) True
-
-
 updateNodeToObject : Node -> String -> Int -> ( Node, Int )
-updateNodeToObject node value currentId =
+updateNodeToObject node valueInString currentId =
     let
-        matches =
-            find All (regex objectRegex) value
+        regexMatches =
+            find All (regex objectRegex) valueInString
                 |> List.map .submatches
                 |> List.head
 
-        reverse_matches =
-            case matches of
+        -- Only the last part of regex matches are interesting. We invert only
+        -- to get the head of this list and discard the rest
+        reverseMatches =
+            case regexMatches of
                 Just match_list ->
                     List.reverse match_list
 
@@ -85,27 +82,37 @@ updateNodeToObject node value currentId =
             head reverseMatches
                 |> Maybe.andThen (\x -> x)
     in
-        case maybeValues of
-            Just objectValue ->
+        case possiblePropertyStringList of
+            -- Sample: prop1=1,prop2=stuff
+            Just propertyStringList ->
                 let
                     ( childNodes, nextId ) =
-                        doCreateNodes objectValue (currentId + 1)
+                        createChildNodes propertyStringList (currentId + 1)
                 in
-                    ( { node | id = currentId, value = (NodeValue True (PossibleNodes (Just childNodes)) Nothing) }, nextId + 1 )
+                    ( { node | id = currentId, value = (NodeValue True (PossibleNodes (Just childNodes)) Nothing) }, nextId )
 
             Nothing ->
-                ( { node | id = currentId, value = (NodeValue False (PossibleNodes Nothing) (Just value)) }, currentId + 1 )
+                ( { node | id = currentId, value = (NodeValue False (PossibleNodes Nothing) (Just valueInString)) }, currentId + 1 )
 
 
-doCreateNodes : String -> Int -> ( List Node, Int )
-doCreateNodes value currentId =
+reduceProperties : String -> ( List (Maybe Node), Int ) -> ( List (Maybe Node), Int )
+reduceProperties kv ( result, id ) =
+    let
+        ( node, nextId ) =
+            createNode kv id
+    in
+        ( result ++ [ node ], nextId )
+
+
+createChildNodes : String -> Int -> ( List Node, Int )
+createChildNodes propertyList currentId =
     let
         listOfKeyValuePairs =
-            value
-                |> splitValue
+            propertyList
+                |> splitProperties
 
         ( childNodes, nextId ) =
-            List.foldl (\kv ( result, id ) -> ( result ++ [ (createNode kv id) ], (id + 1) )) ( [], currentId ) listOfKeyValuePairs
+            List.foldl reduceProperties ( [], currentId ) listOfKeyValuePairs
 
         filteredChildNodes =
             childNodes
@@ -116,17 +123,25 @@ doCreateNodes value currentId =
         ( filteredChildNodes, nextId )
 
 
-splitValue : String -> List String
-splitValue value =
+{-| This method intelligently splits the property list string into an actual
+list.  The reason we need to do this is because properties can be objects too.
+A naive split would cause sub-objects to fall apart.
+
+Example: prop1=1,prop2=com.company.SomeEntity[prop1=2,prop2=stuff]
+
+If we would just split by commas, prop2 could not be parsed properly
+-}
+splitProperties : String -> List String
+splitProperties propertyList =
     let
         valueList =
-            doSplitValue value []
+            doSplitProperties propertyList []
     in
         valueList |> List.reverse
 
 
-doSplitValue : String -> List String -> List String
-doSplitValue remainingPart values =
+doSplitProperties : String -> List String -> List String
+doSplitProperties remainingPart values =
     let
         splitted =
             Regex.split (AtMost 1) (regex ",") remainingPart
@@ -156,7 +171,7 @@ doSplitValue remainingPart values =
                         else
                             ( value, remainderString )
                 in
-                    doSplitValue newRemainder (newValue :: values)
+                    doSplitProperties newRemainder (newValue :: values)
 
 
 getObjectWithClosingBracket : String -> ( String, String )
@@ -198,7 +213,7 @@ doGetObjectWithClosingBracket remainingText objectText bracketCounter =
             ( remainingText, remainingText )
 
 
-createNode : String -> Int -> Maybe Node
+createNode : String -> Int -> ( Maybe Node, Int )
 createNode keyValue currentId =
     let
         splitKeyValue =
@@ -208,7 +223,7 @@ createNode keyValue currentId =
             key :: rest ->
                 case rest of
                     [] ->
-                        Nothing
+                        ( Nothing, currentId + 1 )
 
                     [ value ] ->
                         let
@@ -218,16 +233,19 @@ createNode keyValue currentId =
                                 else
                                     determineType value
 
-                            ( nodes, nextId ) =
-                                doCreateNodes value currentId
+                            ( nodes, _ ) =
+                                createChildNodes value currentId
 
-                            ( updatedNode, _ ) =
-                                updateNodeToObject (Node 0 key typeText (NodeValue (isObject value) (PossibleNodes (Just nodes)) (Just value)) True) value nextId
+                            _ =
+                                Debug.log "createNode (currentId, kv)" ( currentId, keyValue )
+
+                            ( updatedNode, nextId ) =
+                                updateNodeToObject (Node 0 key typeText (NodeValue (isObject value) (PossibleNodes (Just nodes)) (Just value)) True) value currentId
                         in
-                            --Just (Node 0 key typeText (NodeValue (isObject value) (PossibleNodes (createNodes value)) (Just value)) True)
-                            Just updatedNode
+                            ( Just updatedNode, nextId )
 
                     list ->
+                        -- It should not get here
                         let
                             mergedList =
                                 String.join "," list
@@ -235,8 +253,7 @@ createNode keyValue currentId =
                             ( updatedNode, _ ) =
                                 updateNodeToObject (Node 0 key (determineType mergedList) (NodeValue (isObject mergedList) (PossibleNodes Nothing) (Just mergedList)) True) mergedList currentId
                         in
-                            --Just (Node 0 key (determineType mergedList) (NodeValue (isObject mergedList) (PossibleNodes Nothing) (Just mergedList)) True)
-                            Just updatedNode
+                            ( Just updatedNode, currentId + 1 )
 
             [] ->
-                Nothing
+                ( Nothing, currentId + 1 )
